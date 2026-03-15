@@ -35,6 +35,8 @@ export default function VideoRoom({
   videoEnabled = true,
   audioEnabled = true,
 }: VideoRoomProps) {
+  const [roomError, setRoomError] = useState<Error | null>(null);
+
   return (
     <LiveKitRoom
       token={token}
@@ -42,12 +44,11 @@ export default function VideoRoom({
       connect={true}
       video={videoEnabled}
       audio={audioEnabled}
-      // Убираем автоматический onDisconnected, чтобы при ошибке подключения 
-      // мы могли увидеть экран ошибки, а не вылетать на главную.
+      onError={(err) => setRoomError(err)}
       data-lk-theme="default"
       className="flex h-screen-safe w-full flex-col bg-black overflow-hidden"
     >
-      <RoomContent roomId={roomId} onDisconnect={onDisconnect} />
+      <RoomContent roomId={roomId} onDisconnect={onDisconnect} externalError={roomError} />
       <RoomAudioRenderer />
     </LiveKitRoom>
   );
@@ -56,9 +57,11 @@ export default function VideoRoom({
 function RoomContent({
   roomId,
   onDisconnect,
+  externalError,
 }: {
   roomId: string;
   onDisconnect: () => void;
+  externalError: Error | null;
 }) {
   const room = useRoomContext();
   const connectionState = useConnectionState();
@@ -163,6 +166,15 @@ function RoomContent({
     if (connectionState === ConnectionState.Connecting) return (
       <StatusIndicator layout="card" type="info" title={UI_TEXT.connecting} subtitle={UI_TEXT.connectingSubtitle} />
     );
+    
+    // Показываем конкретную ошибку от LiveKit если она есть
+    if (externalError) return (
+      <StatusIndicator
+        layout="card" type="error" title={UI_TEXT.connectError} subtitle={`${UI_TEXT.connectErrorSubtitle}: ${externalError.message}`}
+        primaryAction={{ label: UI_TEXT.retry, onClick: () => window.location.reload() }}
+      />
+    );
+
     if (lastCameraError) return (
       <StatusIndicator
         layout="card" type="error" title={UI_TEXT.noCameraAccess} subtitle={UI_TEXT.noCameraAccessSubtitle}
