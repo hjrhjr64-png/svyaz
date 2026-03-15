@@ -135,10 +135,10 @@ export default function ShareModal({ roomId, onClose }: ShareModalProps) {
           </div>
           <button 
             onClick={handleCopyRoomId}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold uppercase tracking-widest text-white/60 transition-all active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-white/60 transition-all active:scale-90"
+            aria-label="Скопировать код"
           >
-            {copied ? <Check size={14} className="text-success" /> : <Copy size={14} />}
-            Скопировать код
+            {copied ? <Check size={16} className="text-success" /> : <Copy size={16} />}
           </button>
         </footer>
       </div>
