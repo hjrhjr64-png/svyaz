@@ -137,9 +137,9 @@ function RoomContent({
       setTimeoutError(null);
     }
     if (connectionState === ConnectionState.Disconnected) {
-      console.log("Disconnected from room. Last error:", room.lastConnectionError);
+      console.log("Disconnected from room.");
     }
-  }, [connectionState, room.lastConnectionError]);
+  }, [connectionState]);
 
   // Таймаут на подключение (15 секунд)
   useEffect(() => {
