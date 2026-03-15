@@ -74,7 +74,8 @@ export function useActiveSpeaker({ tracks, localParticipantId }: UseActiveSpeake
   }, [tracks, localParticipantId, switchSpeaker, activeSpeakerId]);
 
   // Возвращаем итогового "главного" участника
-  const focusId = pinnedId || activeSpeakerId || (tracks.length > 0 ? getParticipantId(tracks[0]) : null);
+  const remoteTracks = tracks.filter(t => t.participant.identity !== localParticipantId);
+  const focusId = pinnedId || activeSpeakerId || (remoteTracks.length > 0 ? getParticipantId(remoteTracks[0]) : (tracks.length > 0 ? getParticipantId(tracks[0]) : null));
 
   return {
     focusId,

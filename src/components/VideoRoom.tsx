@@ -229,7 +229,7 @@ function RoomContent({
           /* GRID LAYOUT */
           <div className="absolute inset-0 p-4 pb-28 grid gap-4 overflow-y-auto content-center grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {cameraTracks.map((trackRef) => (
-              <div key={trackRef.participant.identity} className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
+              <div key={`${trackRef.participant.identity}-${trackRef.source}`} className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
                 <ParticipantTile
                   trackRef={trackRef}
                   isLocal={trackRef.participant.identity === localParticipant.identity}
@@ -258,25 +258,27 @@ function RoomContent({
               </div>
             )}
 
-            {/* My small floating video */}
-            {participantCount > 1 && localTrack && currentFocusTrack?.participant.identity !== localParticipant.identity && (
-              <div className="absolute right-4 top-20 z-30 w-28 sm:w-40 aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 transition-all active:scale-95 duration-500">
+            {/* My small floating video (always show if others exist and I'm not the only one in focus) */}
+            {participantCount > 1 && localTrack && (currentFocusTrack !== localTrack || participantCount > 1) && (
+              <div className={`absolute right-4 top-20 z-30 w-28 sm:w-40 aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 transition-all active:scale-95 duration-500 ${currentFocusTrack === localTrack ? 'opacity-40 grayscale' : 'opacity-100'}`}>
                 <ParticipantTile trackRef={localTrack} isLocal={true} />
               </div>
             )}
 
-            {/* Horizontal list of others */}
-            {participantCount > 2 && (
+            {/* Horizontal list of others (everyone remote who is not in focus) */}
+            {cameraTracks.some(t => t.participant.identity !== localParticipant.identity && t !== currentFocusTrack) && (
               <div className={`absolute bottom-24 left-0 right-0 z-30 flex justify-center gap-2 overflow-x-auto px-4 pb-4 transition-all duration-500 ${isUiVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
-                {otherTracks.filter(t => t.participant.identity !== localParticipant.identity).map((trackRef) => (
-                  <div 
-                    key={trackRef.participant.identity}
-                    className="h-24 w-18 flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 cursor-pointer hover:ring-accent transition-all"
-                    onClick={(e) => { e.stopPropagation(); togglePin(trackRef.participant.identity); }}
-                  >
-                    <ParticipantTile trackRef={trackRef} isLocal={false} />
-                  </div>
-                ))}
+                {cameraTracks
+                  .filter(t => t.participant.identity !== localParticipant.identity && t !== currentFocusTrack)
+                  .map((trackRef) => (
+                    <div 
+                      key={`${trackRef.participant.identity}-${trackRef.source}`}
+                      className="h-24 w-18 flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 cursor-pointer hover:ring-accent transition-all bg-black/40"
+                      onClick={(e) => { e.stopPropagation(); togglePin(trackRef.participant.identity); }}
+                    >
+                      <ParticipantTile trackRef={trackRef} isLocal={false} />
+                    </div>
+                  ))}
               </div>
             )}
           </div>
