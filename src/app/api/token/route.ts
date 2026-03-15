@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    // 1. Проверка существования и возраста комнаты
+    // 1. Проверка существования и возраста комнаты (также проверяем валидность ключей)
     try {
       const roomService = getRoomServiceClient();
       const rooms = await roomService.listRooms([roomId]);
+      console.log(`Room check success. Found ${rooms.length} rooms.`);
       
       if (rooms.length > 0) {
         const room = rooms[0];
@@ -35,8 +36,13 @@ export async function POST(request: NextRequest) {
           );
         }
       }
-    } catch (e) {
-      console.warn("Room check failed:", e);
+    } catch (e: any) {
+      console.error("Critical: Room check/Auth failed:", e.message);
+      // Если это ошибка авторизации (invalid API key/secret), прокидываем её наружу
+      return NextResponse.json(
+        { error: `Ошибка авторизации сервера: ${e.message}` },
+        { status: 401 }
+      );
     }
 
     // 2. Ограничение длины имени
