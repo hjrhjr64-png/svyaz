@@ -49,7 +49,7 @@ export default function ControlBar({
           onClick={onToggleMic}
           icon={isMicEnabled ? <Mic size={24} /> : <MicOff size={24} />}
           level={isMicEnabled ? audioLevel : 0}
-          label={UI_TEXT.mic}
+          label={isMicEnabled ? UI_TEXT.micOn : UI_TEXT.micOff}
         />
 
         {/* Камера */}
@@ -57,7 +57,7 @@ export default function ControlBar({
           active={isCameraEnabled}
           onClick={onToggleCamera}
           icon={isCameraEnabled ? <Video size={24} /> : <VideoOff size={24} />}
-          label={UI_TEXT.camera}
+          label={isCameraEnabled ? UI_TEXT.cameraOn : UI_TEXT.cameraOff}
         />
 
         {/* Пригласить */}

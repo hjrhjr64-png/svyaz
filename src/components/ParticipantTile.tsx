@@ -9,6 +9,7 @@ import {
   AudioTrack,
 } from "@livekit/components-react";
 import { UI_TEXT } from "@/lib/utils";
+import { MicOff } from "lucide-react";
 
 /**
  * Плитка одного участника.
@@ -109,7 +110,6 @@ export default function ParticipantTile({
           )}
         </div>
       </div>
-    </div>
     </div>
   );
 }
