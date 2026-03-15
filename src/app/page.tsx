@@ -1,65 +1,157 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { UI_TEXT } from "@/lib/utils";
+import { Phone } from "lucide-react";
+
+/**
+ * Главная страница — «Связь».
+ * Оптимизирована для мобильных устройств.
+ */
+export default function HomePage() {
+  const router = useRouter();
+  const [isCreating, setIsCreating] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
+  const [joinInput, setJoinInput] = useState("");
+  const [error, setError] = useState("");
+
+  const handleCreate = async () => {
+    setIsCreating(true);
+    setError("");
+    try {
+      const res = await fetch("/api/room", { method: "POST" });
+      const data = await res.json();
+      if (data.roomId) {
+        router.push(`/room/${data.roomId}`);
+      } else {
+        setError("Не удалось создать комнату");
+      }
+    } catch {
+      setError(UI_TEXT.connectError);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const handleJoin = () => {
+    setError("");
+    const input = joinInput.trim();
+    if (!input) return;
+
+    let roomId = input;
+    try {
+      const url = new URL(input);
+      const parts = url.pathname.split("/");
+      const roomIndex = parts.indexOf("room");
+      if (roomIndex !== -1 && parts[roomIndex + 1]) {
+        roomId = parts[roomIndex + 1];
+      }
+    } catch {
+      // Not a URL
+    }
+
+    if (roomId.length < 4) {
+      setError("Неверный код комнаты");
+      return;
+    }
+
+    router.push(`/room/${roomId}`);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen-safe bg-background flex flex-col items-center justify-center p-6 sm:p-8">
+      <div className="w-full max-w-md flex flex-col items-center text-center">
+        {/* Логотип и Заголовок */}
+        <div className="animate-fade-in flex flex-col items-center mb-12 sm:mb-16">
+          <div 
+            className="w-20 h-20 sm:w-24 sm:h-24 rounded-[22px] flex items-center justify-center shadow-lg mb-6 sm:mb-8"
+            style={{
+              background: "linear-gradient(135deg, #007aff 0%, #5856d6 100%)",
+              boxShadow: "0 8px 32px rgba(0, 122, 255, 0.25)",
+            }}
+          >
+            <Phone className="w-10 h-10 sm:w-12 sm:h-12 text-white" />
+          </div>
+          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3 sm:mb-4">
+            {UI_TEXT.appName}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg sm:text-xl text-muted/80 max-w-[280px] sm:max-w-none">
+            {UI_TEXT.appTagline}
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
+
+        {/* Главные действия */}
+        <div className="w-full space-y-4 animate-fade-in animate-delay-200">
+          {!showJoin ? (
+            <>
+              <button
+                onClick={handleCreate}
+                disabled={isCreating}
+                className="w-full py-5 px-8 bg-accent text-white rounded-2xl text-lg font-semibold shadow-md active:scale-[0.98] transition-all hover:bg-accent-hover flex items-center justify-center gap-3 disabled:opacity-60"
+              >
+                {isCreating ? "Создание…" : UI_TEXT.createRoom}
+              </button>
+              
+              <button
+                onClick={() => setShowJoin(true)}
+                className="w-full py-5 px-8 bg-surface text-foreground rounded-2xl text-lg font-semibold active:scale-[0.98] transition-all hover:bg-border/50 flex items-center justify-center gap-3"
+              >
+                {UI_TEXT.joinRoom}
+              </button>
+            </>
+          ) : (
+            <div className="animate-scale-in w-full space-y-4">
+              <input
+                type="text"
+                value={joinInput}
+                onChange={(e) => setJoinInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+                placeholder={UI_TEXT.joinRoomPlaceholder}
+                autoFocus
+                className="w-full rounded-2xl border border-border bg-surface px-6 py-5 text-lg text-foreground outline-none transition-all placeholder:text-muted focus:border-accent focus:ring-4 focus:ring-accent/10"
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowJoin(false)}
+                  className="flex-1 py-5 px-4 bg-surface text-foreground rounded-2xl font-semibold active:scale-[0.98] transition-all"
+                >
+                  Отмена
+                </button>
+                <button
+                  onClick={handleJoin}
+                  disabled={!joinInput.trim()}
+                  className="flex-[2] py-5 px-4 bg-foreground text-white rounded-2xl font-semibold active:scale-[0.98] transition-all disabled:opacity-40"
+                >
+                  Войти
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Ошибка */}
+        {error && (
+          <p className="animate-fade-in mt-6 text-sm text-danger font-medium leading-relaxed">
+            {error}
+          </p>
+        )}
+
+        {/* Подвал */}
+        <div className="relative animate-fade-in animate-delay-300 mt-20 sm:mt-24 flex h-8 items-center justify-center select-none cursor-default group">
+          <p className="absolute pointer-events-none transition-all duration-500 ease-in-out group-hover:opacity-0 group-active:opacity-0 text-sm text-muted/60 whitespace-nowrap">
+            Без регистрации · Без паролей
+          </p>
+          <a 
+            href="https://artemk.pro/" 
+            target="_blank" 
             rel="noopener noreferrer"
+            className="absolute opacity-0 transition-all duration-500 ease-in-out group-hover:opacity-100 group-active:opacity-100 text-sm font-semibold text-accent whitespace-nowrap tracking-wide cursor-pointer hover:underline p-2"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
+            Артём К
           </a>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

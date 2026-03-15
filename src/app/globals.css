@@ -1,26 +1,160 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ============================================
+   Тепло — Apple-minimal design system
+   ============================================ */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Colors */
+  --color-background: #ffffff;
+  --color-foreground: #1d1d1f;
+  --color-muted: #86868b;
+  --color-border: #d2d2d7;
+  --color-surface: #f5f5f7;
+  --color-accent: #007aff;
+  --color-accent-hover: #0066d6;
+  --color-danger: #ff3b30;
+  --color-danger-hover: #d63029;
+  --color-success: #34c759;
+
+  /* Typography */
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display",
+    "Segoe UI", Roboto, sans-serif;
+
+  /* Spacing */
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+
+  /* Animations */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Base reset */
+* {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+:root {
+  --sat: env(safe-area-inset-top);
+  --sar: env(safe-area-inset-right);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  overflow: hidden; /* We handle scrolling in specific components */
+  position: fixed; /* Prevent bouncy scrolling on iOS at root level */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: var(--sat) var(--sar) var(--sab) var(--sal);
+}
+
+/* Mobile-first utility for full viewport height that works with mobile browsers */
+.min-h-screen-safe {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+.h-screen-safe {
+  height: 100vh;
+  height: -webkit-fill-available;
+}
+
+/* ============================================
+   LiveKit component overrides (Apple-minimal)
+   ============================================ */
+
+/* Override LiveKit default styles to match our theme */
+[data-lk-theme="default"] {
+  --lk-bg: var(--color-background);
+  --lk-bg2: var(--color-surface);
+  --lk-fg: var(--color-foreground);
+  --lk-border-color: var(--color-border);
+  --lk-control-bg: var(--color-surface);
+  --lk-control-hover-bg: var(--color-border);
+}
+
+/* Smooth fade-in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s var(--ease-out-expo) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s var(--ease-out-expo) forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s var(--ease-out-expo) forwards;
+}
+
+.animate-delay-100 {
+  animation-delay: 0.1s;
+  opacity: 0;
+}
+
+.animate-delay-200 {
+  animation-delay: 0.2s;
+  opacity: 0;
+}
+
+.animate-delay-300 {
+  animation-delay: 0.3s;
+  opacity: 0;
+}
+
+/* Toast notification styles */
+.toast-enter {
+  animation: fadeIn 0.3s var(--ease-out-expo) forwards;
+}
+
+.toast-exit {
+  animation: fadeIn 0.3s var(--ease-out-expo) reverse forwards;
 }
