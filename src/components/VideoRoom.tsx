@@ -186,17 +186,18 @@ function RoomContent({
         primaryAction={{ label: UI_TEXT.createRoom, onClick: () => window.location.href = "/" }}
       />
     );
-    if (connectionState === ConnectionState.Connecting) return (
-      <StatusIndicator layout="card" type="info" title={UI_TEXT.connecting} subtitle={timeoutError || UI_TEXT.connectingSubtitle} />
-    );
-    
-    // Показываем конкретную ошибку от LiveKit если она есть
+
+    // Сначала проверяем ошибки (включая таймаут), чтобы они не перекрывались статусом "Подключаем"
     if (externalError || timeoutError) return (
       <StatusIndicator
         layout="card" type="error" title={UI_TEXT.connectError} 
         subtitle={`${UI_TEXT.connectErrorSubtitle}: ${externalError?.message || timeoutError}`}
         primaryAction={{ label: UI_TEXT.retry, onClick: () => window.location.reload() }}
       />
+    );
+
+    if (connectionState === ConnectionState.Connecting) return (
+      <StatusIndicator layout="card" type="info" title={UI_TEXT.connecting} subtitle={UI_TEXT.connectingSubtitle} />
     );
 
     if (lastCameraError) return (
