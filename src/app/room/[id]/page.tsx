@@ -93,7 +93,7 @@ export default function RoomPage() {
       <div className="flex min-h-dvh items-center justify-center px-6">
         <div className="w-full max-w-sm text-center">
           <p className="mb-4 text-lg font-medium text-danger">
-            {UI_TEXT.connectionError}
+            {UI_TEXT.connectError}
           </p>
           <p className="text-sm text-muted">
             NEXT_PUBLIC_LIVEKIT_URL не настроен
