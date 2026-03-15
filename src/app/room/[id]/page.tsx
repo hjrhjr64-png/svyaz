@@ -65,7 +65,7 @@ export default function RoomPage() {
         setToken(data.token);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : UI_TEXT.connectionError
+          err instanceof Error ? err.message : UI_TEXT.connectError
         );
       } finally {
         setIsLoading(false);
