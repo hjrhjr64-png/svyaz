@@ -16,10 +16,12 @@ export async function generateToken(
   const apiSecret = process.env.LIVEKIT_API_SECRET;
 
   if (!apiKey || !apiSecret) {
+    console.error("Environment check: LIVEKIT_API_KEY or SECRET is missing.");
     throw new Error(
       "LIVEKIT_API_KEY и LIVEKIT_API_SECRET не настроены в .env.local"
     );
   }
+  console.log(`LiveKit credentials located. Key: ${apiKey.slice(0, 4)}...`);
 
   const token = new AccessToken(apiKey, apiSecret, {
     identity: participantName,

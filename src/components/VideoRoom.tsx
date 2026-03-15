@@ -133,17 +133,21 @@ function RoomContent({
   useEffect(() => {
     console.log("LiveKit Connection State:", connectionState);
     if (connectionState === ConnectionState.Connected) {
+      console.log("Successfully connected to room!");
       setTimeoutError(null);
     }
-  }, [connectionState]);
+    if (connectionState === ConnectionState.Disconnected) {
+      console.log("Disconnected from room. Last error:", room.lastConnectionError);
+    }
+  }, [connectionState, room.lastConnectionError]);
 
   // Таймаут на подключение (15 секунд)
   useEffect(() => {
     if (connectionState === ConnectionState.Connecting) {
       const timer = setTimeout(() => {
         if (connectionState === ConnectionState.Connecting) {
-          console.error("Connection timed out after 15s");
-          setTimeoutError("Превышено время ожидания. Проверьте правильность ссылки (должна начинаться с wss://)");
+          console.error("Connection timed out after 15s. Checking environment...");
+          setTimeoutError("Превышено время ожидания. Возможные причины: неверные API ключи или блокировка со стороны браузера.");
         }
       }, 15000);
       return () => clearTimeout(timer);
