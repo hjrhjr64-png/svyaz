@@ -127,12 +127,15 @@ export default function ShareModal({ roomId, onClose }: ShareModalProps) {
 
         {/* Room Info Footer */}
         <footer className="pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4 text-white/30">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-widest opacity-40">Код комнаты</span>
-            <span className="text-sm font-mono font-bold text-white/60 tracking-wider">
+          <button 
+            onClick={handleCopyRoomId}
+            className="flex items-center gap-3 group/code hover:text-white/80 transition-colors active:scale-[0.98]"
+          >
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-40 group-hover/code:opacity-60 transition-opacity">Код комнаты</span>
+            <span className="text-sm font-mono font-bold text-white/60 tracking-wider group-hover/code:text-white transition-colors">
                {formattedRoomId}
             </span>
-          </div>
+          </button>
           <button 
             onClick={handleCopyRoomId}
             className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/5 hover:bg-white/10 text-white/60 transition-all active:scale-90"
