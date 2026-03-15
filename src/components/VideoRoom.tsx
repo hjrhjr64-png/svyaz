@@ -42,7 +42,8 @@ export default function VideoRoom({
       connect={true}
       video={videoEnabled}
       audio={audioEnabled}
-      onDisconnected={onDisconnect}
+      // Убираем автоматический onDisconnected, чтобы при ошибке подключения 
+      // мы могли увидеть экран ошибки, а не вылетать на главную.
       data-lk-theme="default"
       className="flex h-screen-safe w-full flex-col bg-black overflow-hidden"
     >
