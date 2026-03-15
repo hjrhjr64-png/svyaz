@@ -80,12 +80,18 @@ export default function ControlBar({
 
         {/* Экран (Скрыто на мобилках, если не поддерживается/неудобно) */}
         <div className="hidden md:block">
+        <div className="hidden md:block">
           <ControlButton
-            active={isScreenShareEnabled}
+            active={true} // Всегда активная кнопка (инструмент)
             onClick={onToggleScreenShare}
-            icon={<ScreenShare size={24} />}
+            icon={
+              <div className={isScreenShareEnabled ? "text-accent" : "text-white"}>
+                <ScreenShare size={24} />
+              </div>
+            }
             label="Экран"
           />
+        </div>
         </div>
 
         <div className="mx-2 h-8 w-[1px] bg-white/10" />
@@ -120,8 +126,8 @@ function ControlButton({
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={`relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-300 active:scale-[0.85] overflow-hidden ${
         active 
-          ? "bg-white/10 text-white hover:bg-white/20" 
-          : "bg-white/5 text-white/30"
+          ? "bg-white/10 text-white hover:bg-white/15" 
+          : "bg-white/5 text-white/20 ring-1 ring-white/5"
       }`}
       aria-label={label}
     >
