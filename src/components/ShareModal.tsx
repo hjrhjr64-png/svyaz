@@ -51,6 +51,10 @@ export default function ShareModal({ roomId, onClose }: ShareModalProps) {
     window.open(`https://wa.me/?text=${encodeURIComponent("Присоединяйся к звонку: " + roomLink)}`, "_blank");
   };
 
+  const shareVK = () => {
+    window.open(`https://vk.com/share.php?url=${encodeURIComponent(roomLink)}&title=${encodeURIComponent("Присоединяйся к звонку в Связи")}`, "_blank");
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center animate-fade-in group">
       {/* Backdrop */}
@@ -105,26 +109,31 @@ export default function ShareModal({ roomId, onClose }: ShareModalProps) {
         </div>
 
         {/* Action Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-10">
           <ShareButton 
             onClick={shareTelegram} 
-            icon={<Send size={24} />} 
-            label="Telegram" 
+            icon={<Send size={22} />} 
+            label="TG" 
           />
           <ShareButton 
             onClick={shareWhatsApp} 
-            icon={<MessageCircle size={24} />} 
-            label="WhatsApp" 
+            icon={<MessageCircle size={22} />} 
+            label="WA" 
+          />
+          <ShareButton 
+            onClick={shareVK} 
+            icon={<VkIcon />} 
+            label="VK" 
           />
           <ShareButton 
             onClick={handleNativeShare} 
-            icon={<Share2 size={24} />} 
+            icon={<Share2 size={22} />} 
             label="Поделиться" 
             disabled={typeof navigator !== 'undefined' && !navigator.share}
           />
           <ShareButton 
             onClick={onClose} 
-            icon={<Globe size={24} />} 
+            icon={<Globe size={22} />} 
             label="Браузер" 
           />
         </div>
@@ -140,6 +149,14 @@ export default function ShareModal({ roomId, onClose }: ShareModalProps) {
         </footer>
       </div>
     </div>
+  );
+}
+
+function VkIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+       <path d="M15.072 2H8.928C3.12 2 2 3.12 2 8.928v6.144C2 20.88 3.12 22 8.928 22h6.144c5.808 0 6.928-1.12 6.928-6.928V8.928C22 3.12 20.88 2 15.072 2zm3.33 13.56c.11.233.1.4-.04.54-.15.15-.436.15-.436.15h-1.458c-.12 0-.25-.06-.34-.17-.18-.21-.4-.5-.65-.79-.26-.3-.52-.64-.7-.64-.15 0-.2.04-.2.15v1.2c0 .16-.06.26-.2.26s-.35.04-1.01.04c-1.57 0-3.32-.97-4.63-2.85-1.92-2.73-2.45-2.85-2.45-3.04s.06-.26.26-.26h1.45c.12 0 .22.06.31.18.15.2.35.48.56.76.54.73.74 1.05.9 1.05.08 0 .1-.04.1-.21V10.1c0-.25-.15-.36-.45-.39-.12-.02-.2-.11-.2-.23s.11-.22.45-.22h2.24c.15 0 .2.08.2.26v2.33c0 .12.04.16.1.16.08 0 .15-.04.29-.2.37-.41.65-.92.83-1.45.05-.15.1-.23.3-.23h1.46c.17 0 .21.08.18.2-.18.66-1 1.62-1.33 2.06-.06.08-.08.12 0 .21.08.09.34.4.63.8.31.42.55.83.65 1.08z"/>
+    </svg>
   );
 }
 

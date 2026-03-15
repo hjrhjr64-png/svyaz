@@ -3,7 +3,7 @@ import { UI_TEXT } from "@/lib/utils";
 import { useLocalParticipant } from "@livekit/components-react";
 import { Track } from "livekit-client";
 import { useAudioLevel } from "@/hooks/useAudioLevel";
-import { Mic, MicOff, Video, VideoOff, ScreenShare, UserPlus, PhoneOff, LayoutGrid, LayoutList } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, ScreenShare, UserPlus, Phone, LayoutGrid, LayoutList } from "lucide-react";
 
 interface ControlBarProps {
   isMicEnabled: boolean;
@@ -95,7 +95,7 @@ export default function ControlBar({
           onClick={onDisconnect}
           className="flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full bg-danger text-white transition-all duration-300 hover:bg-danger-hover active:scale-95 shadow-lg shadow-danger/20"
         >
-          <PhoneOff size={28} className="rotate-[135deg]" />
+          <Phone size={28} className="rotate-[135deg]" />
         </button>
       </div>
     </div>
@@ -121,7 +121,7 @@ function ControlButton({
       className={`relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full transition-all duration-300 active:scale-[0.85] overflow-hidden ${
         active 
           ? "bg-white/10 text-white hover:bg-white/20" 
-          : "bg-danger/20 text-danger ring-1 ring-danger/30"
+          : "bg-white/5 text-white/30"
       }`}
       aria-label={label}
     >
