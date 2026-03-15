@@ -77,10 +77,12 @@ function RoomContent({
   const [toast, setToast] = useState<{ title: string; type: StatusType } | null>(null);
   const [isEnded, setIsEnded] = useState(false);
   const [hadParticipants, setHadParticipants] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"grid" | "speaker">("speaker");
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
+  const [timeoutError, setTimeoutError] = useState<string | null>(null);
   
   const uiTimeoutRef = useRef<NodeJS.Timeout|null>(null);
 
-  // Камера и экран
   const cameraTracks = useTracks(
     [
       { source: Track.Source.Camera, withPlaceholder: true },
@@ -91,12 +93,10 @@ function RoomContent({
 
   const participantCount = cameraTracks.length;
 
-  // Логика автоскрытия UI
   const resetUiTimeout = useCallback(() => {
     setIsUiVisible(true);
     if (uiTimeoutRef.current) clearTimeout(uiTimeoutRef.current);
     uiTimeoutRef.current = setTimeout(() => {
-      // Скрываем только если звонок активен и нет открытых модалок
       if (connectionState === ConnectionState.Connected && !showShareModal && participantCount > 1) {
         setIsUiVisible(false);
       }
@@ -108,12 +108,10 @@ function RoomContent({
     return () => { if (uiTimeoutRef.current) clearTimeout(uiTimeoutRef.current); };
   }, [resetUiTimeout]);
 
-  // Следим за участниками
   useEffect(() => {
     if (cameraTracks.length > 1) setHadParticipants(true);
   }, [cameraTracks.length]);
 
-  // Тосты
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -121,40 +119,40 @@ function RoomContent({
     }
   }, [toast]);
 
-  // Активный спикер
-  const { focusId, pinnedId, togglePin } = useActiveSpeaker({
+  // Логика фокуса и пина
+  const { focusId } = useActiveSpeaker({
     tracks: cameraTracks,
     localParticipantId: localParticipant.identity,
   });
 
-  const [timeoutError, setTimeoutError] = useState<string | null>(null);
+  const togglePin = useCallback((identity: string) => {
+    setPinnedId(prev => {
+      const next = prev === identity ? null : identity;
+      if (next) setLayoutMode("speaker");
+      return next;
+    });
+  }, []);
 
-  // Логирование состояния подключения для отладки
+  const toggleLayout = useCallback(() => {
+    setLayoutMode(prev => prev === "grid" ? "speaker" : "grid");
+    setPinnedId(null);
+  }, []);
+
   useEffect(() => {
-    console.log("LiveKit Connection State:", connectionState);
-    if (connectionState === ConnectionState.Connected) {
-      console.log("Successfully connected to room!");
-      setTimeoutError(null);
-    }
-    if (connectionState === ConnectionState.Disconnected) {
-      console.log("Disconnected from room.");
-    }
+    if (connectionState === ConnectionState.Connected) setTimeoutError(null);
   }, [connectionState]);
 
-  // Таймаут на подключение (15 секунд)
   useEffect(() => {
     if (connectionState === ConnectionState.Connecting) {
       const timer = setTimeout(() => {
         if (connectionState === ConnectionState.Connecting) {
-          console.error("Connection timed out after 15s. Checking environment...");
-          setTimeoutError("Превышено время ожидания. Возможные причины: неверные API ключи или блокировка со стороны браузера.");
+          setTimeoutError("Превышено время ожидания.");
         }
       }, 15000);
       return () => clearTimeout(timer);
     }
   }, [connectionState]);
 
-  // Авто-показ модалки при входе в пустую комнату
   useEffect(() => {
     if (connectionState === ConnectionState.Connected && participantCount === 1) {
       setShowShareModal(true);
@@ -175,55 +173,40 @@ function RoomContent({
     resetUiTimeout();
   }, [localParticipant, resetUiTimeout]);
 
-  const handleDisconnect = useCallback(() => {
+  const handleDisconnect = () => {
     room.disconnect();
     setIsEnded(true);
-  }, [room]);
+  };
 
   const renderStatus = () => {
     if (isEnded) return (
-      <StatusIndicator
-        layout="card"
-        type="info"
-        title={UI_TEXT.callFinished}
-        subtitle={UI_TEXT.callFinishedSubtitle}
+      <StatusIndicator layout="card" type="info" title={UI_TEXT.callFinished} subtitle={UI_TEXT.callFinishedSubtitle}
         primaryAction={{ label: UI_TEXT.createRoom, onClick: () => window.location.href = "/" }}
       />
     );
-
-    // Сначала проверяем ошибки (включая таймаут), чтобы они не перекрывались статусом "Подключаем"
     if (externalError || timeoutError) return (
-      <StatusIndicator
-        layout="card" type="error" title={UI_TEXT.connectError} 
+      <StatusIndicator layout="card" type="error" title={UI_TEXT.connectError} 
         subtitle={`${UI_TEXT.connectErrorSubtitle}: ${externalError?.message || timeoutError}`}
         primaryAction={{ label: UI_TEXT.retry, onClick: () => window.location.reload() }}
       />
     );
-
     if (connectionState === ConnectionState.Connecting) return (
       <StatusIndicator layout="card" type="info" title={UI_TEXT.connecting} subtitle={UI_TEXT.connectingSubtitle} />
     );
-
     if (lastCameraError) return (
-      <StatusIndicator
-        layout="card" type="error" title={UI_TEXT.noCameraAccess} subtitle={UI_TEXT.noCameraAccessSubtitle}
+      <StatusIndicator layout="card" type="error" title={UI_TEXT.noCameraAccess} subtitle={UI_TEXT.noCameraAccessSubtitle}
         primaryAction={{ label: UI_TEXT.retry, onClick: () => window.location.reload() }}
       />
     );
-    if (connectionState === ConnectionState.Reconnecting) return (
-      <StatusIndicator layout="card" type="warning" title={UI_TEXT.reconnecting} subtitle={UI_TEXT.reconnectingSubtitle} />
-    );
     if (connectionState === ConnectionState.Disconnected) return (
-      <StatusIndicator
-        layout="card" type="error" title={UI_TEXT.connectError} subtitle={UI_TEXT.connectErrorSubtitle}
+      <StatusIndicator layout="card" type="error" title={UI_TEXT.connectError} subtitle={UI_TEXT.connectErrorSubtitle}
         primaryAction={{ label: UI_TEXT.retry, onClick: () => window.location.reload() }}
       />
     );
     if (participantCount === 1) {
       const isWaiting = !hadParticipants;
       return (
-        <StatusIndicator
-          layout="banner" type="info"
+        <StatusIndicator layout="banner" type="info"
           title={isWaiting ? UI_TEXT.waitingForOthers : UI_TEXT.onlyYou}
           subtitle={isWaiting ? UI_TEXT.waitingSubtitle : UI_TEXT.onlyYouSubtitle}
           primaryAction={{ label: UI_TEXT.invite, onClick: () => setShowShareModal(true) }}
@@ -238,88 +221,104 @@ function RoomContent({
   const localTrack = cameraTracks.find(t => t.participant.identity === localParticipant.identity);
 
   return (
-    <div 
-      className="relative flex h-full w-full flex-col overflow-hidden bg-black"
-      onClick={resetUiTimeout}
-    >
-      {/* 1. Главное видео (Speaker Focus) */}
+    <div className="relative flex h-full w-full flex-col overflow-hidden bg-black" onClick={resetUiTimeout}>
+      
+      {/* 1. Main Content Area */}
       <div className="flex-1 relative overflow-hidden">
-        {currentFocusTrack && (
-          <div className="absolute inset-0 transition-all duration-700 ease-in-out">
-            <ParticipantTile
-              trackRef={currentFocusTrack}
-              isLocal={currentFocusTrack.participant.identity === localParticipant.identity}
-              isPinned={!!pinnedId}
-            />
-          </div>
-        )}
-
-        {/* 2. Плавающее свое видео (только если есть другие и не в фокусе) */}
-        {participantCount > 1 && localTrack && currentFocusTrack?.participant.identity !== localParticipant.identity && (
-          <div className="absolute right-4 top-20 z-30 w-28 sm:w-40 aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 transition-all active:scale-95 duration-500">
-            <ParticipantTile trackRef={localTrack} isLocal={true} />
-          </div>
-        )}
-
-        {/* 3. Горизонтальная лента других участников (снизу) */}
-        {participantCount > 2 && (
-          <div className={`absolute bottom-24 left-0 right-0 z-20 flex justify-center gap-2 overflow-x-auto px-4 pb-4 transition-all duration-500 ${isUiVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
-            {otherTracks.filter(t => t.participant.identity !== localParticipant.identity).map((trackRef) => (
-              <div 
-                key={trackRef.participant.identity}
-                className="h-24 w-18 flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10"
-                onClick={(e) => { e.stopPropagation(); togglePin(trackRef.participant.identity); }}
-              >
-                <ParticipantTile trackRef={trackRef} isLocal={false} />
+        {layoutMode === "grid" ? (
+          /* GRID LAYOUT */
+          <div className="absolute inset-0 p-4 pb-28 grid gap-4 overflow-y-auto content-center grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {cameraTracks.map((trackRef) => (
+              <div key={trackRef.participant.identity} className="relative aspect-video rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10 group">
+                <ParticipantTile
+                  trackRef={trackRef}
+                  isLocal={trackRef.participant.identity === localParticipant.identity}
+                />
+                <button 
+                  className="absolute inset-0 z-20 opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 flex items-center justify-center"
+                  onClick={(e) => { e.stopPropagation(); togglePin(trackRef.participant.identity); }}
+                >
+                  <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-xs font-bold text-white ring-1 ring-white/20 uppercase tracking-widest">
+                    Закрепить
+                  </div>
+                </button>
               </div>
             ))}
+          </div>
+        ) : (
+          /* SPEAKER LAYOUT */
+          <div className="absolute inset-0">
+            {currentFocusTrack && (
+              <div className="absolute inset-0 transition-all duration-700 ease-in-out">
+                <ParticipantTile
+                  trackRef={currentFocusTrack}
+                  isLocal={currentFocusTrack.participant.identity === localParticipant.identity}
+                  isPinned={!!pinnedId}
+                />
+              </div>
+            )}
+
+            {/* My small floating video */}
+            {participantCount > 1 && localTrack && currentFocusTrack?.participant.identity !== localParticipant.identity && (
+              <div className="absolute right-4 top-20 z-30 w-28 sm:w-40 aspect-[3/4] overflow-hidden rounded-2xl shadow-2xl ring-1 ring-white/10 transition-all active:scale-95 duration-500">
+                <ParticipantTile trackRef={localTrack} isLocal={true} />
+              </div>
+            )}
+
+            {/* Horizontal list of others */}
+            {participantCount > 2 && (
+              <div className={`absolute bottom-24 left-0 right-0 z-30 flex justify-center gap-2 overflow-x-auto px-4 pb-4 transition-all duration-500 ${isUiVisible ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0 pointer-events-none'}`}>
+                {otherTracks.filter(t => t.participant.identity !== localParticipant.identity).map((trackRef) => (
+                  <div 
+                    key={trackRef.participant.identity}
+                    className="h-24 w-18 flex-shrink-0 overflow-hidden rounded-xl shadow-lg ring-1 ring-white/10 cursor-pointer hover:ring-accent transition-all"
+                    onClick={(e) => { e.stopPropagation(); togglePin(trackRef.participant.identity); }}
+                  >
+                    <ParticipantTile trackRef={trackRef} isLocal={false} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* 4. Навигация (Header) */}
+      {/* 2. Header (Shield + Participant Count) */}
       <header className={`absolute top-0 left-0 right-0 z-40 flex items-center justify-between p-4 px-6 transition-all duration-500 bg-gradient-to-b from-black/60 to-transparent ${isUiVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
         <div className="flex items-center gap-3">
-           <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-lg">
-             <ShieldCheck size={18} className="text-white" />
-           </div>
-           <h1 className="text-lg font-bold text-white tracking-tight">Связь</h1>
+          <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center shadow-lg">
+            <ShieldCheck size={18} className="text-white" />
+          </div>
+          <h1 className="text-lg font-bold text-white tracking-tight">Связь</h1>
         </div>
-        
         <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-md rounded-full border border-white/10">
           <Users size={14} className="text-white/60" />
           <span className="text-xs font-bold text-white uppercase tracking-wider">{participantCount}</span>
         </div>
       </header>
 
-      {/* 5. Контролы (Bottom) */}
-      <div className={`absolute bottom-0 left-0 right-0 z-40 transition-all duration-500 ${isUiVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
+      {/* 3. Controls (ControlBar) */}
+      <div className={`absolute bottom-0 left-0 right-0 z-50 transition-all duration-500 ${isUiVisible ? 'translate-y-0 opacity-100' : 'translate-y-full opacity-0 pointer-events-none'}`}>
         <div className="pb-safe pt-8 bg-gradient-to-t from-black/80 to-transparent">
           <ControlBar
             isMicEnabled={localParticipant.isMicrophoneEnabled}
             isCameraEnabled={localParticipant.isCameraEnabled}
             isScreenShareEnabled={isScreenShareEnabled}
-            layoutMode="speaker" // Всегда спикер на мобилках
+            layoutMode={layoutMode}
             onToggleMic={toggleMic}
             onToggleCamera={toggleCamera}
             onToggleScreenShare={() => localParticipant.setScreenShareEnabled(!isScreenShareEnabled)}
-            onToggleLayout={() => {}} // Убрали из мобилки
+            onToggleLayout={toggleLayout}
             onDisconnect={handleDisconnect}
             onShowShare={() => setShowShareModal(true)}
           />
         </div>
       </div>
 
-      {/* Индикаторы и модалки */}
+      {/* Overlays */}
       {renderStatus()}
       {toast && <StatusIndicator layout="toast" type={toast.type} title={toast.title} onHide={() => setToast(null)} />}
-      
-      {showShareModal && (
-        <ShareModal 
-          roomId={roomId} 
-          onClose={() => setShowShareModal(false)} 
-        />
-      )}
+      {showShareModal && <ShareModal roomId={roomId} onClose={() => setShowShareModal(false)} />}
     </div>
   );
 }

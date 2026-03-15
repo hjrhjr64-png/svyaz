@@ -80,7 +80,6 @@ export default function ControlBar({
 
         {/* Экран (Скрыто на мобилках, если не поддерживается/неудобно) */}
         <div className="hidden md:block">
-        <div className="hidden md:block">
           <ControlButton
             active={true} // Всегда активная кнопка (инструмент)
             onClick={onToggleScreenShare}
@@ -91,7 +90,6 @@ export default function ControlBar({
             }
             label="Экран"
           />
-        </div>
         </div>
 
         <div className="mx-2 h-8 w-[1px] bg-white/10" />
