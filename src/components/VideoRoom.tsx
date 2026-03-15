@@ -127,6 +127,29 @@ function RoomContent({
     localParticipantId: localParticipant.identity,
   });
 
+  const [timeoutError, setTimeoutError] = useState<string | null>(null);
+
+  // Логирование состояния подключения для отладки
+  useEffect(() => {
+    console.log("LiveKit Connection State:", connectionState);
+    if (connectionState === ConnectionState.Connected) {
+      setTimeoutError(null);
+    }
+  }, [connectionState]);
+
+  // Таймаут на подключение (15 секунд)
+  useEffect(() => {
+    if (connectionState === ConnectionState.Connecting) {
+      const timer = setTimeout(() => {
+        if (connectionState === ConnectionState.Connecting) {
+          console.error("Connection timed out after 15s");
+          setTimeoutError("Превышено время ожидания. Проверьте правильность ссылки (должна начинаться с wss://)");
+        }
+      }, 15000);
+      return () => clearTimeout(timer);
+    }
+  }, [connectionState]);
+
   // Авто-показ модалки при входе в пустую комнату
   useEffect(() => {
     if (connectionState === ConnectionState.Connected && participantCount === 1) {
@@ -164,13 +187,14 @@ function RoomContent({
       />
     );
     if (connectionState === ConnectionState.Connecting) return (
-      <StatusIndicator layout="card" type="info" title={UI_TEXT.connecting} subtitle={UI_TEXT.connectingSubtitle} />
+      <StatusIndicator layout="card" type="info" title={UI_TEXT.connecting} subtitle={timeoutError || UI_TEXT.connectingSubtitle} />
     );
     
     // Показываем конкретную ошибку от LiveKit если она есть
-    if (externalError) return (
+    if (externalError || timeoutError) return (
       <StatusIndicator
-        layout="card" type="error" title={UI_TEXT.connectError} subtitle={`${UI_TEXT.connectErrorSubtitle}: ${externalError.message}`}
+        layout="card" type="error" title={UI_TEXT.connectError} 
+        subtitle={`${UI_TEXT.connectErrorSubtitle}: ${externalError?.message || timeoutError}`}
         primaryAction={{ label: UI_TEXT.retry, onClick: () => window.location.reload() }}
       />
     );
